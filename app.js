@@ -1,23 +1,29 @@
 const express = require('express')
+const socketio = require('socket.io')
+const http = require('http')
+const path = require('path')
+
 const app = express()
+const server = http.createServer(app)
+const io = socketio(server)
 
-const http=require("http");
-const path = require('path');
+app.set('view engine', 'ejs')
+app.use(express.static(path.join(__dirname, '/public')))
 
-const socketio=require("socket.io")
-const server=http.createServer(app);
-const io=socketio(server)
-
-
-
-app.set("view engine","ejs");
-app.set(express.static(path.join(__dirname,"public")))
-
-
-app.get('/', function (req, res) {
-  res.send('Hi')
+io.on('connection', function (socket) {
+  console.log('connected')
+  socket.on('send-location', function (data) {
+    io.emit('receive-location', {
+      id: socket.id,
+      ...data,
+    })
+  })
 })
 
+app.get('/', function (req, res) {
+  res.render('index')
+})
 
-
-server.listen(3000)
+server.listen(3000, () => {
+  console.log('Server Start')
+})
